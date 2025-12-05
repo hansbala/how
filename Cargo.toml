@@ -1,0 +1,10 @@
+[package]
+name = "how"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.100"
+directories = "5.0"
+llama-cpp-2 = "0.1.129"
+llama-cpp-sys-2 = "0.1.129"

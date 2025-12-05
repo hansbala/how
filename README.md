@@ -22,8 +22,7 @@ find . -name "*.jpg" -size +10M
 
 ### macOS (Homebrew)
 ```bash
-brew tap hansbala/how
-brew install how
+brew install hansbala/tap/how
 ```
 
 ### Linux / Manual

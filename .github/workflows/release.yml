@@ -1,0 +1,63 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ "main" ]
+    tags: [ "v*" ]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact_name: how-linux-amd64
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact_name: how-darwin-arm64
+
+    steps:
+      # 1. Checkout with LFS enabled (Critical!)
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          lfs: true
+
+      - name: Install Dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libclang-dev build-essential
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      # 2. Build (Model is already there via LFS)
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Prepare Artifact
+        shell: bash
+        run: cp target/${{ matrix.target }}/release/how ${{ matrix.artifact_name }}
+
+      - name: Upload Artifact (Test)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_name }}
+
+      - name: Release (On Tag)
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: ${{ matrix.artifact_name }}
+
